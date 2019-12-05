@@ -1,13 +1,31 @@
 'use strict';
-const fs = require('fs');
-const bencode = require('bencode');
+var fs = require('fs');
+var bencode = require('bencode');  
 
-const torrentString = fs.readFileSync('puppy.torrent');
-console.log(torrentString.toString('utf8'));            // Full Torrent File String
+var dgram = require('dgram');
+var Buffer = require('buffer').Buffer;
+var urlParse = require('url').parse;
 
-const torrent = bencode.decode(fs.readFileSync('puppy.torrent'));
-const trackerUrl = torrent.announce.toString('utf8');
-console.log(trackerUrl);                                // This is our UDP
+// Here is the UDP for the torrent file.  This is also the location
+// of the trackers torrent.
+
+//UDP is used more ofter since it is better performance than
+// http, and http is built on top of tcp.
+var torrent = bencode.decode(fs.readFileSync('puppy.torrent'));
+var trackerUrl = torrent.announce.toString('utf8');
+console.log(trackerUrl);                                
+
+var url = urlParse(trackerUrl);
+
+var socket = dgram.createSocket('udp4');
+var message = Buffer.from('Hello World?', 'utf8');
+
+socket.send(message, 0, message.length, url.port, url.host, () => {});
+
+socket.on('message', msg => {
+    console.log('message is', msg)
+});
+
 
 
 
